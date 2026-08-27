@@ -6,7 +6,9 @@
     "start": "node server.js",
     "ui:inspect": "node tests/ui-inspect.mjs",
     "ui:inspect:before": "node tests/ui-inspect.mjs --label before",
-    "ui:inspect:after": "node tests/ui-inspect.mjs --label after"
+    "ui:inspect:after": "node tests/ui-inspect.mjs --label after",
+    "ui:inspect:deliver": "node tests/deliver-scroll.mjs",
+    "ui:inspect:deliver-cards": "node tests/deliver-card-layout.mjs"
   },
   "engines": {
     "node": ">=20"

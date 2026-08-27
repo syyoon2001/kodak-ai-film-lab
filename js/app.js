@@ -234,7 +234,9 @@ function renderArtwork(container, variant, context = 'pick', garmentColor = 'cre
 // ===== Screen Navigation =====
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  const screen = document.getElementById(id);
+  screen.classList.add('active');
+  if (id === 'screen-deliver') screen.querySelector('.content').scrollTop = 0;
 }
 
 function goBack() {
@@ -854,12 +856,23 @@ document.querySelectorAll('.deliver-card').forEach(card => {
 
     if (state.deliver === 'deliver') {
       const formWrap = document.getElementById('dhl-form-wrap');
+      const content = document.querySelector('#screen-deliver .content');
       formWrap.style.display = 'block';
       // Require form fields
       checkDeliverNext();
       // On the fixed kiosk viewport the form sits below the fold, so bring it
       // into view once its layout is applied — no visual redesign needed.
-      requestAnimationFrame(() => formWrap.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      requestAnimationFrame(() => {
+        const contentRect = content.getBoundingClientRect();
+        const formRect = formWrap.getBoundingClientRect();
+        const revealHeight = Math.min(180, formRect.height);
+        const delta = Math.max(0, formRect.top + revealHeight - contentRect.bottom + 24);
+        const maxScrollTop = Math.max(0, content.scrollHeight - content.clientHeight);
+        content.scrollTo({
+          top: Math.min(maxScrollTop, content.scrollTop + delta),
+          behavior: 'smooth'
+        });
+      });
     } else {
       document.getElementById('dhl-form-wrap').style.display = 'none';
       document.getElementById('deliver-next').disabled = false;
