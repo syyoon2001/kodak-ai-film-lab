@@ -667,7 +667,26 @@ function apparelSvg(product, color) {
     </svg>`;
 }
 
-function buildApparelMockup(mockup, product, color) {
+function getApparelMockupAsset(product, color) {
+  const config = PRODUCT_MOCKUP_CONFIG[product];
+  const safeColor = ['cream', 'yellow', 'black', 'red'].includes(color) ? color : 'cream';
+  const family = getMockupFamily();
+  return (config.assets[family] || config.assets.portra)[safeColor];
+}
+
+function preloadImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = async () => {
+      try { if (image.decode) await image.decode(); } catch (_) {}
+      resolve(src);
+    };
+    image.onerror = reject;
+    image.src = src;
+  });
+}
+
+function buildApparelMockup(mockup, product, color, preloadedAsset) {
   const config = PRODUCT_MOCKUP_CONFIG[product];
   const safeColor = ['cream', 'yellow', 'black', 'red'].includes(color) ? color : 'cream';
   const family = getMockupFamily();
@@ -705,17 +724,18 @@ function buildApparelMockup(mockup, product, color) {
     shell.classList.remove('has-photo-asset');
     image.removeAttribute('src');
   };
+  if (preloadedAsset === assetPath) shell.classList.add('has-photo-asset');
   image.src = assetPath;
   return artworkTarget;
 }
 
-function buildProductMockup(product, color) {
+function buildProductMockup(product, color, preloadedAsset) {
   const mockup = document.getElementById('product-mockup');
   const safeProduct = ['tshirt', 'hoodie', 'tumbler'].includes(product) ? product : 'tshirt';
   mockup.className = `tshirt-mockup product-mockup product-${safeProduct} ${['tshirt', 'hoodie'].includes(safeProduct) ? 'product-apparel product-tshirt' : ''} color-${color}`;
 
   if (safeProduct === 'tshirt' || safeProduct === 'hoodie') {
-    return buildApparelMockup(mockup, safeProduct, color);
+    return buildApparelMockup(mockup, safeProduct, color, preloadedAsset);
   } else if (safeProduct === 'tumbler') {
     const tumbler = TUMBLER_VARIANTS[color] || TUMBLER_VARIANTS.cream;
     mockup.innerHTML = `
@@ -727,10 +747,10 @@ function buildProductMockup(product, color) {
   return mockup.querySelector('.product-artwork-target');
 }
 
-function updatePrintPreview() {
+function updatePrintPreview(preloadedAsset) {
   const output = OUTPUT_INFO[state.output] || OUTPUT_INFO.tshirt;
   const selectedVariant = state.selectedArtwork || state.artworkVariants[state.resultIndex] || createArtworkVariants([])[0];
-  const artworkTarget = buildProductMockup(state.output, state.tshirtColor);
+  const artworkTarget = buildProductMockup(state.output, state.tshirtColor, preloadedAsset);
   const artworkColor = state.tshirtColor;
   if (artworkTarget) renderArtwork(artworkTarget, selectedVariant, 'print', artworkColor);
   const mockupPhoto = document.querySelector('#product-mockup .mockup-photo-replacement img');
@@ -814,12 +834,22 @@ function updatePrintPreview() {
 }
 
 // Color selector: garment color is independent from the selected fixed frame.
+let colorTransitionId = 0;
 document.querySelectorAll('.color-swatch').forEach(swatch => {
-  swatch.onclick = () => {
+  swatch.onclick = async () => {
     document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
     swatch.classList.add('selected');
-    state.tshirtColor = swatch.dataset.color;
-    updatePrintPreview();
+    const nextColor = swatch.dataset.color;
+    const transitionId = ++colorTransitionId;
+    let preloadedAsset = null;
+    if (state.output === 'tshirt' || state.output === 'hoodie') {
+      preloadedAsset = getApparelMockupAsset(state.output, nextColor);
+      try { await preloadImage(preloadedAsset); } catch (_) { preloadedAsset = null; }
+    }
+    if (transitionId !== colorTransitionId) return;
+
+    state.tshirtColor = nextColor;
+    updatePrintPreview(preloadedAsset);
   };
 });
 
