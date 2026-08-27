@@ -108,7 +108,7 @@
     DEMO.started = true;
 
     // Scene 01 — MAIN (brand recognition)
-    await sleep(3200);
+    await sleep(2700);
     if (DEMO.cancelled) return;
 
     // Scene 02 — PRODUCT: enter and choose the T-shirt
@@ -121,7 +121,7 @@
     // Scene 03 — CAPTURE: show the QR panel, then receive the sample photo
     await tap(document.getElementById('product-next'));
     if (!(await waitForScreen('screen-choose'))) return;
-    await sleep(2500);
+    await sleep(2000);
     if (DEMO.cancelled) return;
     // Inject the sample photo exactly like a real mobile upload would.
     try { clearInterval(mobileUploadRuntime.pollTimer); mobileUploadRuntime.pollTimer = null; } catch (_) {}

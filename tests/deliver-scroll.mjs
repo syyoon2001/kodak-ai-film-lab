@@ -97,6 +97,20 @@ try {
   const demoPage = await context.newPage();
   const demoDiagnostics = collectErrors(demoPage);
   await demoPage.goto(`${baseUrl}?demo=1`, { waitUntil: 'networkidle' });
+  await demoPage.locator('#screen-deliver.active').waitFor({ state: 'visible', timeout: 50000 });
+  await demoPage.waitForFunction(() => (
+    document.querySelector('#screen-deliver .content').scrollTop > 0 &&
+    document.getElementById('dhl-address').value.length > 0
+  ));
+  const demoDeliver = {
+    windowScrollY: await demoPage.evaluate(() => window.scrollY),
+    contentScrollTop: await demoPage.locator('#screen-deliver .content').evaluate(element => element.scrollTop),
+    navBar: await demoPage.locator('#screen-deliver .nav-bar').boundingBox(),
+    inputs: await Promise.all(['#dhl-country', '#dhl-name', '#dhl-address'].map(selector => (
+      demoPage.locator(selector).boundingBox()
+    )))
+  };
+  await demoPage.screenshot({ path: resolve(outputDirectory, 'demo-deliver-form.png'), fullPage: true });
   await demoPage.locator('#screen-done.active').waitFor({ state: 'visible', timeout: 60000 });
   const demo = await demoPage.evaluate(() => ({
     ...window.__deliverScrollAudit,
@@ -108,11 +122,14 @@ try {
     Number(((demo.transitions[index + 1].at - entry.at) / 1000).toFixed(2))
   ]));
   demo.diagnostics = demoDiagnostics;
+  demo.deliver = demoDeliver;
   await demoPage.screenshot({ path: resolve(outputDirectory, 'demo-flow-done.png'), fullPage: true });
 
   assert.equal(demo.maxWindowY, 0);
   assert.equal(demo.finalWindowScrollY, 0);
   assert.ok(demo.maxContentScrollTop > 0);
+  assert.equal(demo.deliver.windowScrollY, 0);
+  assert.ok(demo.deliver.inputs.every(box => box.y + box.height <= demo.deliver.navBar.y));
   assert.deepEqual(demo.topBarLast, demo.topBarFirst);
   assert.equal(demo.finalScreen, 'screen-done');
   console.log(JSON.stringify({ regular, demo }, null, 2));

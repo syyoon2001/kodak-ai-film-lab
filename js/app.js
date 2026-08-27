@@ -864,9 +864,10 @@ document.querySelectorAll('.deliver-card').forEach(card => {
       // into view once its layout is applied — no visual redesign needed.
       requestAnimationFrame(() => {
         const contentRect = content.getBoundingClientRect();
-        const formRect = formWrap.getBoundingClientRect();
-        const revealHeight = Math.min(180, formRect.height);
-        const delta = Math.max(0, formRect.top + revealHeight - contentRect.bottom + 24);
+        const navRect = document.querySelector('#screen-deliver .nav-bar').getBoundingClientRect();
+        const addressRect = document.getElementById('dhl-address').getBoundingClientRect();
+        const scale = content.offsetHeight ? contentRect.height / content.offsetHeight : 1;
+        const delta = Math.max(0, addressRect.bottom - navRect.top + 24) / scale;
         const maxScrollTop = Math.max(0, content.scrollHeight - content.clientHeight);
         content.scrollTo({
           top: Math.min(maxScrollTop, content.scrollTop + delta),

@@ -18,15 +18,33 @@ try {
   const cards = page.locator('#screen-deliver .deliver-card');
   const before = await Promise.all([cards.nth(0).boundingBox(), cards.nth(1).boundingBox()]);
   const navBefore = await page.locator('#screen-deliver .nav-bar').boundingBox();
+  const contentScrollTopBefore = await page.locator('#screen-deliver .content').evaluate(element => element.scrollTop);
   await page.screenshot({ path: resolve(outputDirectory, 'deliver-cards-before.png'), fullPage: true });
 
   await cards.nth(1).click();
   await page.waitForTimeout(1000);
   const after = await Promise.all([cards.nth(0).boundingBox(), cards.nth(1).boundingBox()]);
   const navAfter = await page.locator('#screen-deliver .nav-bar').boundingBox();
+  const contentAfter = await page.locator('#screen-deliver .content').boundingBox();
+  const formAfter = await page.locator('#dhl-form-wrap').boundingBox();
+  const inputsAfter = await Promise.all(['#dhl-country', '#dhl-name', '#dhl-address'].map(selector => (
+    page.locator(selector).boundingBox()
+  )));
   await page.screenshot({ path: resolve(outputDirectory, 'deliver-cards-after.png'), fullPage: true });
 
-  const result = { before, after, navBefore, navAfter, windowScrollY: await page.evaluate(() => window.scrollY), consoleErrors };
+  const result = {
+    before,
+    after,
+    navBefore,
+    navAfter,
+    contentAfter,
+    formAfter,
+    inputsAfter,
+    contentScrollTopBefore,
+    contentScrollTop: await page.locator('#screen-deliver .content').evaluate(element => element.scrollTop),
+    windowScrollY: await page.evaluate(() => window.scrollY),
+    consoleErrors
+  };
   console.log(JSON.stringify(result, null, 2));
 
   if (!measureOnly) {
@@ -35,6 +53,9 @@ try {
     assert.deepEqual(size(after[0]), size(after[1]));
     assert.deepEqual(after.map(size), before.map(size));
     assert.ok(before.every(box => box.y + box.height <= navBefore.y));
+    assert.equal(contentScrollTopBefore, 0);
+    assert.ok(result.contentScrollTop > contentScrollTopBefore);
+    assert.ok(inputsAfter.every(box => box.y >= contentAfter.y && box.y + box.height <= navAfter.y));
     assert.deepEqual(navAfter, navBefore);
     assert.equal(result.windowScrollY, 0);
     assert.deepEqual(consoleErrors, []);
