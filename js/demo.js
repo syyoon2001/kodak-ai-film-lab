@@ -102,26 +102,26 @@
     }, true);
   }
 
-  // AUTO DEMO MODE — one full order, ~28s, driven through real app handlers.
+  // AUTO DEMO MODE — one full order, ~37s, driven through real app handlers.
   async function runAutoDemo() {
     if (DEMO.started) return;
     DEMO.started = true;
 
     // Scene 01 — MAIN (brand recognition)
-    await sleep(2500);
+    await sleep(3200);
     if (DEMO.cancelled) return;
 
     // Scene 02 — PRODUCT: enter and choose the T-shirt
     await tap(document.getElementById('welcome-start'));
     if (!(await waitForScreen('screen-capture'))) return;
-    await sleep(1000);
+    await sleep(1700);
     await tap(document.querySelector('.output-card[data-output="tshirt"]'));
-    await sleep(1100);
+    await sleep(1700);
 
     // Scene 03 — CAPTURE: show the QR panel, then receive the sample photo
     await tap(document.getElementById('product-next'));
     if (!(await waitForScreen('screen-choose'))) return;
-    await sleep(1600);
+    await sleep(2500);
     if (DEMO.cancelled) return;
     // Inject the sample photo exactly like a real mobile upload would.
     try { clearInterval(mobileUploadRuntime.pollTimer); mobileUploadRuntime.pollTimer = null; } catch (_) {}
@@ -136,19 +136,19 @@
     captureNext.disabled = false;
     const qrStatus = document.getElementById('qr-status');
     if (qrStatus) qrStatus.textContent = '사진을 받았습니다. 다음을 눌러 사진을 확인하세요.';
-    await sleep(700);
+    await sleep(1200);
 
     // Scene 03b — PHOTO REVIEW
     await tap(captureNext);
     if (!(await waitForScreen('screen-photo-confirm'))) return;
-    await sleep(1700);
+    await sleep(3200);
     await tap(document.getElementById('photo-confirm-next'));
 
     // Scene 04 — DESIGN: pick a frame
     if (!(await waitForScreen('screen-pick'))) return;
-    await sleep(1000);
+    await sleep(1700);
     await tap(document.querySelector('.style-card[data-style="film-frame"]'));
-    await sleep(900);
+    await sleep(1700);
 
     // Scene 05 — DEVELOP: real film-develop animation auto-advances to PRINT
     await tap(document.getElementById('pick-next'));
@@ -156,24 +156,24 @@
     if (!(await waitForScreen('screen-print', 20000))) return;
 
     // Scene 06 — PRINT (the money shot): photo now printed on the T-shirt.
-    await sleep(2100);
+    await sleep(2400);
     // Demonstrate live customisation with one garment-colour change.
     await tap(document.querySelector('.color-swatch[data-color="black"]'));
-    await sleep(1600);
+    await sleep(2000);
     await tap(document.getElementById('print-next'));
 
     // Scene 07 — DELIVER: send the moment abroad via DHL
     if (!(await waitForScreen('screen-deliver'))) return;
-    await sleep(1200);
+    await sleep(1800);
     await tap(document.querySelector('.deliver-card[data-deliver="deliver"]'));
-    await sleep(900); // let the DHL form open + settle
+    await sleep(1200); // let the DHL form open + settle
     if (DEMO.cancelled) return;
     setInput('dhl-country', 'JAPAN');
     await sleep(350);
     setInput('dhl-name', 'YUI SATO');
     await sleep(350);
     setInput('dhl-address', 'Shibuya, Tokyo, Japan');
-    await sleep(1200);
+    await sleep(1700);
     await tap(document.getElementById('deliver-next'));
 
     // Scene 08 — FINAL HOLD: stop on the completion screen (no loop, no reset).

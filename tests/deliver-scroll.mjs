@@ -10,10 +10,22 @@ await mkdir(outputDirectory, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 await context.addInitScript(() => {
-  window.__deliverScrollAudit = { maxWindowY: 0, maxContentScrollTop: 0, topBarFirst: null, topBarLast: null };
+  window.__deliverScrollAudit = {
+    maxWindowY: 0,
+    maxContentScrollTop: 0,
+    topBarFirst: null,
+    topBarLast: null,
+    lastScreen: null,
+    transitions: []
+  };
   setInterval(() => {
     const audit = window.__deliverScrollAudit;
     audit.maxWindowY = Math.max(audit.maxWindowY, window.scrollY);
+    const activeScreen = document.querySelector('.screen.active')?.id || null;
+    if (activeScreen && activeScreen !== audit.lastScreen) {
+      audit.lastScreen = activeScreen;
+      audit.transitions.push({ screen: activeScreen, at: performance.now() });
+    }
     const screen = document.getElementById('screen-deliver');
     if (!screen?.classList.contains('active')) return;
     const content = screen.querySelector('.content');
@@ -91,6 +103,10 @@ try {
     finalWindowScrollY: window.scrollY,
     finalScreen: document.querySelector('.screen.active')?.id
   }));
+  demo.durations = Object.fromEntries(demo.transitions.slice(0, -1).map((entry, index) => [
+    entry.screen,
+    Number(((demo.transitions[index + 1].at - entry.at) / 1000).toFixed(2))
+  ]));
   demo.diagnostics = demoDiagnostics;
   await demoPage.screenshot({ path: resolve(outputDirectory, 'demo-flow-done.png'), fullPage: true });
 
