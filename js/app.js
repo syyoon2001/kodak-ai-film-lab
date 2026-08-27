@@ -514,7 +514,7 @@ function startDeveloping() {
       if (!apiDone) msgEl.textContent = 'Finalizing your moments...';
       finishIfReady();
     }
-  }, 120);
+  }, new URLSearchParams(location.search).get('demo') === '1' ? 80 : 120);
   developRuntime.timers.add(interval);
 }
 
