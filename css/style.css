@@ -264,6 +264,20 @@ body {
   background: var(--kodak-yellow);
 }
 
+/* Keep delivery results scrollable without showing browser chrome. */
+#screen-deliver .content,
+#screen-done .content {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#screen-deliver .content::-webkit-scrollbar,
+#screen-done .content::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* ===== Typography on Yellow ===== */
 .kicker {
   font-family: 'Bricolage Grotesque', sans-serif;
