@@ -3,12 +3,18 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "ui:inspect": "node tests/ui-inspect.mjs",
+    "ui:inspect:before": "node tests/ui-inspect.mjs --label before",
+    "ui:inspect:after": "node tests/ui-inspect.mjs --label after"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
     "@vercel/blob": "^2.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1"
   }
 }

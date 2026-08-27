@@ -577,9 +577,9 @@ const PRODUCT_MOCKUP_CONFIG = {
     },
     safeArea: { x: 39, y: 28, width: 22, height: 34 },
     photoAreas: {
-      colorama: { x: 32.7, y: 34.6, width: 33.3, height: 25.9 },
-      portra: { x: 35.0, y: 30.5, width: 29.7, height: 22.0 },
-      archive: { x: 38.6, y: 32.2, width: 26.6, height: 21.3 }
+      colorama: { x: 32.9, y: 34.7, width: 33.1, height: 25.7 },
+      portra: { x: 35.4, y: 30.7, width: 28.8, height: 21.9 },
+      archive: { x: 38.5, y: 32.3, width: 26.5, height: 21.2 }
     }
   },
   hoodie: {
@@ -605,9 +605,9 @@ const PRODUCT_MOCKUP_CONFIG = {
     },
     safeArea: { x: 40, y: 32, width: 20, height: 29 },
     photoAreas: {
-      colorama: { x: 37.2, y: 46.0, width: 25.5, height: 19.2 },
-      portra: { x: 37.2, y: 40.4, width: 25.2, height: 19.0 },
-      archive: { x: 41.8, y: 44.8, width: 20.6, height: 16.2 }
+      colorama: { x: 38.1, y: 46.8, width: 25.7, height: 19.4 },
+      portra: { x: 37.5, y: 40.7, width: 24.6, height: 18.4 },
+      archive: { x: 42.1, y: 44.9, width: 20.5, height: 16.5 }
     }
   }
 };
@@ -1018,4 +1018,66 @@ function restart() {
   window.addEventListener('resize', fitKioskStage, { passive: true });
   window.visualViewport?.addEventListener('resize', fitKioskStage, { passive: true });
   window.addEventListener('orientationchange', fitKioskStage, { passive: true });
+})();
+
+// Local development only: jump between screens without changing app state.
+(function initializeScreenNavigator() {
+  if (!['localhost', '127.0.0.1'].includes(location.hostname)) return;
+  if (new URLSearchParams(location.search).get('demo') === '1') return;
+
+  const screens = [...document.querySelectorAll('.screen[id]')];
+  if (!screens.length) return;
+
+  const style = document.createElement('style');
+  style.textContent = `
+    #dev-screen-navigator{display:block;visibility:visible;opacity:1;position:fixed;z-index:2147483647;
+      right:12px;top:12px;width:170px;padding:10px;
+      color:#eee;background:rgba(18,18,17,.94);border:1px solid #ffb700;border-radius:6px;
+      box-shadow:0 8px 24px rgba(0,0,0,.4);font:11px/1.25 Arial,sans-serif}
+    #dev-screen-navigator *{box-sizing:border-box}
+    #dev-screen-navigator strong{display:block;margin:0 0 7px;color:#ffb700;font-size:11px;letter-spacing:.08em}
+    #dev-screen-navigator nav{display:grid;gap:4px}
+    #dev-screen-navigator button{width:100%;padding:5px 7px;overflow:hidden;border:1px solid #555;border-radius:3px;
+      color:#ccc;background:#292927;font:inherit;text-align:left;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+    #dev-screen-navigator button:hover{border-color:#ffb700;color:#fff}
+    #dev-screen-navigator button.active{border-color:#ffb700;color:#171715;background:#ffb700;font-weight:700}
+  `;
+  document.head.appendChild(style);
+
+  const panel = document.createElement('aside');
+  panel.id = 'dev-screen-navigator';
+  panel.setAttribute('aria-label', 'Screen Navigator');
+  panel.innerHTML = '<strong>SCREEN NAVIGATOR</strong><nav></nav>';
+  const nav = panel.querySelector('nav');
+
+  function screenLabel(screen) {
+    const title = screen.querySelector('.screen-title');
+    if (title?.textContent.trim()) return title.textContent.trim().replace(/\s+/g, ' ');
+    return screen.id.replace(/^screen-/, '').replace(/-/g, ' ').toUpperCase();
+  }
+
+  function updateActiveButton() {
+    nav.querySelectorAll('button').forEach(button => {
+      button.classList.toggle('active', document.getElementById(button.dataset.screen)?.classList.contains('active'));
+    });
+  }
+
+  screens.forEach(screen => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.screen = screen.id;
+    button.textContent = screenLabel(screen);
+    button.title = screen.id;
+    button.addEventListener('click', () => {
+      showScreen(screen.id);
+      updateActiveButton();
+    });
+    nav.appendChild(button);
+  });
+
+  const observer = new MutationObserver(updateActiveButton);
+  screens.forEach(screen => observer.observe(screen, { attributes: true, attributeFilter: ['class'] }));
+  panel.addEventListener('pointerdown', event => event.stopPropagation());
+  document.body.appendChild(panel);
+  updateActiveButton();
 })();

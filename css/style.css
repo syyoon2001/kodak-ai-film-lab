@@ -2440,6 +2440,39 @@ html, body { background:var(--film-black); color:var(--film-paper); }
 .product-tshirt .artwork--print .artwork-footer .artwork-copy { text-align:right; }
 .product-tshirt .artwork--print .artwork-shipping-label { display:none; }
 
+/* PRINT photo assets use square source canvases. Keep the outer frame and the
+   rendered asset on the same box so flex shrinking and preview scaling cannot
+   create cream gutters or pull the image above its frame. */
+#screen-print #product-mockup.product-tshirt:not(.product-hoodie),
+#screen-print #product-mockup.product-hoodie,
+#screen-print #product-mockup.product-tumbler {
+  flex:0 0 344px;
+  width:344px;
+  height:344px;
+  margin-top:18px;
+  padding:0;
+  box-sizing:border-box;
+  overflow:hidden;
+  background:#0b0b0a;
+  border-width:8px;
+}
+#screen-print #product-mockup.product-tshirt:not(.product-hoodie) > .asset-product-mockup,
+#screen-print #product-mockup.product-hoodie > .asset-product-mockup,
+#screen-print #product-mockup.product-tumbler > .stock-tumbler-mockup {
+  flex:0 0 328px;
+  width:328px;
+  height:328px;
+  transform:none;
+  transform-origin:center;
+}
+#screen-print #product-mockup .product-mockup-image,
+#screen-print #product-mockup .stock-tumbler-mockup img {
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center;
+}
+
 @media (min-width:0px) {
   .product-mockup > .tshirt-garment { transform:scale(.82); }
   .product-tshirt .tshirt-print-area { top:100px; }
