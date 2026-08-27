@@ -1454,7 +1454,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 32px;
-  flex: 1;
+  flex: 0 0 390px;
   align-items: stretch;
 }
 .deliver-card {
@@ -1465,7 +1465,8 @@ body {
   transition: all 0.2s;
   text-align: center;
   color: var(--warm-white);
-  min-height:390px;
+  min-height:0;
+  height:390px;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -1473,7 +1474,7 @@ body {
 }
 .deliver-card:hover {
   border-color: var(--kodak-red);
-  transform: translateY(-4px);
+  transform: none;
 }
 .deliver-card.selected {
   border-color: var(--kodak-red);
@@ -1846,7 +1847,7 @@ html, body { background:var(--film-black); color:var(--film-paper); }
 }
 .output-card:hover,
 .style-card:hover,
-.deliver-card:hover { border-color:var(--kodak-yellow); transform:translateY(-3px); }
+.deliver-card:hover { border-color:var(--kodak-yellow); transform:none; }
 .output-card.selected,
 .style-card.selected,
 .deliver-card.selected { border-color:var(--kodak-yellow); box-shadow:0 0 0 2px var(--kodak-yellow); background:#151411; }
@@ -2439,6 +2440,39 @@ html, body { background:var(--film-black); color:var(--film-paper); }
 .product-tshirt .artwork--print .artwork-sidebar .artwork-meta,
 .product-tshirt .artwork--print .artwork-footer .artwork-copy { text-align:right; }
 .product-tshirt .artwork--print .artwork-shipping-label { display:none; }
+
+/* PRINT photo assets use square source canvases. Keep the outer frame and the
+   rendered asset on the same box so flex shrinking and preview scaling cannot
+   create cream gutters or pull the image above its frame. */
+#screen-print #product-mockup.product-tshirt:not(.product-hoodie),
+#screen-print #product-mockup.product-hoodie,
+#screen-print #product-mockup.product-tumbler {
+  flex:0 0 344px;
+  width:344px;
+  height:344px;
+  margin-top:18px;
+  padding:0;
+  box-sizing:border-box;
+  overflow:hidden;
+  background:#0b0b0a;
+  border-width:8px;
+}
+#screen-print #product-mockup.product-tshirt:not(.product-hoodie) > .asset-product-mockup,
+#screen-print #product-mockup.product-hoodie > .asset-product-mockup,
+#screen-print #product-mockup.product-tumbler > .stock-tumbler-mockup {
+  flex:0 0 328px;
+  width:328px;
+  height:328px;
+  transform:none;
+  transform-origin:center;
+}
+#screen-print #product-mockup .product-mockup-image,
+#screen-print #product-mockup .stock-tumbler-mockup img {
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center;
+}
 
 @media (min-width:0px) {
   .product-mockup > .tshirt-garment { transform:scale(.82); }
