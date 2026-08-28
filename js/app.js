@@ -1064,12 +1064,19 @@ function restart() {
   window.addEventListener('orientationchange', fitKioskStage, { passive: true });
 })();
 
-// Local development only: jump between screens without changing app state.
+// Preview navigation: available in the default build, but never in auto-demo mode.
 (function initializeScreenNavigator() {
-  if (!['localhost', '127.0.0.1'].includes(location.hostname)) return;
   if (new URLSearchParams(location.search).get('demo') === '1') return;
 
-  const screens = [...document.querySelectorAll('.screen[id]')];
+  const screenOrder = [
+    'screen-welcome', 'screen-capture', 'screen-choose', 'screen-photo-confirm',
+    'screen-pick', 'screen-develop', 'screen-print', 'screen-deliver', 'screen-done'
+  ];
+  const screens = [...document.querySelectorAll('.screen[id]')].sort((a, b) => {
+    const aIndex = screenOrder.indexOf(a.id);
+    const bIndex = screenOrder.indexOf(b.id);
+    return (aIndex < 0 ? screenOrder.length : aIndex) - (bIndex < 0 ? screenOrder.length : bIndex);
+  });
   if (!screens.length) return;
 
   const style = document.createElement('style');
@@ -1095,8 +1102,18 @@ function restart() {
   const nav = panel.querySelector('nav');
 
   function screenLabel(screen) {
-    const title = screen.querySelector('.screen-title');
-    if (title?.textContent.trim()) return title.textContent.trim().replace(/\s+/g, ' ');
+    const labels = {
+      'screen-welcome': 'WELCOME',
+      'screen-capture': 'PRODUCT',
+      'screen-choose': 'CAPTURE',
+      'screen-photo-confirm': 'PHOTO REVIEW',
+      'screen-pick': 'DESIGN',
+      'screen-develop': 'DEVELOP',
+      'screen-print': 'PRINT',
+      'screen-deliver': 'DELIVER',
+      'screen-done': 'DONE'
+    };
+    if (labels[screen.id]) return labels[screen.id];
     return screen.id.replace(/^screen-/, '').replace(/-/g, ' ').toUpperCase();
   }
 
