@@ -22,14 +22,40 @@ const panel = page.locator('#dev-screen-navigator');
 await panel.waitFor({ state: 'visible' });
 assert.deepEqual(await panel.locator('button').allTextContents(), expected.map(([, label]) => label));
 
-const stateBefore = await page.evaluate(() => JSON.stringify(state));
 for (const [screenId] of expected) {
   const button = panel.locator(`button[data-screen="${screenId}"]`);
   await button.click();
   await page.locator(`#${screenId}.active`).waitFor({ state: 'visible' });
   assert.ok(await button.evaluate(element => element.classList.contains('active')));
 }
-assert.equal(await page.evaluate(() => JSON.stringify(state)), stateBefore);
+
+const previewScreens = [
+  ['screen-choose', '#upload-qr'],
+  ['screen-photo-confirm', '#photo-confirm-image'],
+  ['screen-pick', '.garment-design-example'],
+  ['screen-develop', '.develop-container'],
+  ['screen-print', '#product-mockup img'],
+  ['screen-deliver', '.deliver-grid'],
+  ['screen-done', '#done-order-number']
+];
+
+for (const [screenId, requiredContent] of previewScreens) {
+  await page.goto(baseUrl, { waitUntil: 'networkidle' });
+  await page.locator(`#dev-screen-navigator button[data-screen="${screenId}"]`).click();
+  await page.locator(`#${screenId}.active`).waitFor({ state: 'visible' });
+  const content = page.locator(`#${screenId} ${requiredContent}`);
+  await content.first().waitFor({ state: 'visible' });
+  const brokenImages = await page.locator(`#${screenId} img:visible`).evaluateAll(images =>
+    images.filter(image => !image.complete || image.naturalWidth === 0).map(image => image.id || image.alt)
+  );
+  assert.deepEqual(brokenImages, [], `${screenId} contains broken images`);
+}
+
+await page.goto(baseUrl, { waitUntil: 'networkidle' });
+await page.locator('#dev-screen-navigator button[data-screen="screen-done"]').click();
+assert.equal(await page.evaluate(() => state.photoPath), './assets/samples/family.jpeg');
+assert.ok(await page.evaluate(() => state.selectedArtwork?.imagePath === state.photoPath));
+assert.notEqual(await page.locator('#done-order-number').textContent(), 'K-000000');
 
 await page.goto(`${baseUrl}?demo=1`, { waitUntil: 'domcontentloaded' });
 assert.equal(await page.locator('#dev-screen-navigator').count(), 0);

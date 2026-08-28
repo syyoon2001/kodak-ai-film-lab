@@ -30,6 +30,11 @@ const IMAGE_PLACEHOLDER = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent
     <text x="400" y="285" text-anchor="middle" fill="#FFB700" font-family="Arial, sans-serif" font-size="42" font-weight="700">KODAK MOMENT</text>
     <text x="400" y="340" text-anchor="middle" fill="#999999" font-family="Arial, sans-serif" font-size="22">IMAGE UNAVAILABLE</text>
   </svg>`)}`;
+const PREVIEW_QR = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" shape-rendering="crispEdges">
+    <rect width="29" height="29" fill="#fff"/>
+    <path fill="#171717" d="M2 2h7v7H2zm2 2v3h3V4zM20 2h7v7h-7zm2 2v3h3V4zM2 20h7v7H2zm2 2v3h3v-3zM11 2h2v2h-2zm4 0h3v2h-3zm-4 5h2v3h-2zm4-2h2v2h-2zm3 4h2v3h-2zm-7 3h3v2h-3zm5 1h2v4h-2zm4 1h7v2h-7zm-9 3h3v3h-3zm5 2h3v2h-3zm5-1h2v3h-2zm4 1h2v2h-2zm-15 4h2v4h-2zm4-1h3v2h-3zm4 3h3v2h-3zm4-2h5v2h-5z"/>
+  </svg>`)}`;
 
 const developRuntime = {
   sessionId: 0,
@@ -1123,6 +1128,46 @@ function restart() {
     });
   }
 
+  function preparePreviewScreen(screenId) {
+    if (screenId === 'screen-choose' && !mobileUploadRuntime.session) {
+      const qr = document.getElementById('upload-qr');
+      if (!qr.getAttribute('src')) qr.src = PREVIEW_QR;
+      qr.hidden = false;
+      document.getElementById('qr-status').textContent = 'SCREEN NAVIGATOR PREVIEW QR';
+    }
+
+    const photoScreens = [
+      'screen-photo-confirm', 'screen-pick', 'screen-develop', 'screen-print',
+      'screen-deliver', 'screen-done'
+    ];
+    if (!photoScreens.includes(screenId)) return;
+
+    if (!state.photoPath) {
+      state.photoPath = './assets/samples/family.jpeg';
+      state.photoSourceType = state.photoSourceType || 'navigator-preview';
+    }
+    state.output = state.output || 'tshirt';
+    state.style = state.style || 'film-frame';
+
+    const confirmImage = document.getElementById('photo-confirm-image');
+    setSafeImageSource(confirmImage, state.photoPath, './assets/samples/family.jpeg');
+    document.getElementById('photo-confirm-date').textContent = `SEOUL · ${getKodakDate()}`;
+    updateDesignProductExamples();
+
+    if (!state.artworkVariants.length) state.artworkVariants = createArtworkVariants([]);
+    if (!state.selectedArtwork) {
+      state.resultIndex = Number.isInteger(state.resultIndex) ? state.resultIndex : 0;
+      state.selectedArtwork = state.artworkVariants[state.resultIndex] || state.artworkVariants[0];
+    }
+
+    if (['screen-print', 'screen-deliver', 'screen-done'].includes(screenId)) updatePrintPreview();
+    if (screenId === 'screen-done') {
+      state.deliver = state.deliver || 'take';
+      state.orderNo = state.orderNo || createOrderNumber();
+      updateDoneScreen();
+    }
+  }
+
   screens.forEach(screen => {
     const button = document.createElement('button');
     button.type = 'button';
@@ -1130,6 +1175,7 @@ function restart() {
     button.textContent = screenLabel(screen);
     button.title = screen.id;
     button.addEventListener('click', () => {
+      preparePreviewScreen(screen.id);
       showScreen(screen.id);
       updateActiveButton();
     });
